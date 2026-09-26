@@ -1,0 +1,13 @@
+target/
+.tools/
+.m2/
+entrega/
+.idea/
+.vscode/
+*.iml
+*.log
+.classpath
+.project
+.settings/
+docs/ROTEIRO-VIDEO.md
+docs/ENTREGA.md

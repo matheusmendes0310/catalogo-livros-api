@@ -1,0 +1,747 @@
+{
+  "info": {
+    "name": "Catálogo de Livros",
+    "description": "API com CRUD em memória. Reinicie a aplicação e execute as requisições em ordem. Os IDs são salvos automaticamente nas variáveis da coleção.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "idDom",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idMemorias",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHobbit",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idNovo",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Listar catálogo vazio",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros",
+        "description": "01 - Listar catálogo vazio"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Lista vazia\", function () { pm.expect(pm.response.json()).to.eql([]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Cadastrar Dom Casmurro",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros",
+        "description": "02 - Cadastrar Dom Casmurro",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+              "const livro = pm.response.json();",
+              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"Dom Casmurro\"); pm.expect(livro.id).to.be.a(\"number\"); });",
+              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
+              "pm.collectionVariables.set(\"idDom\", livro.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Cadastrar Memórias Póstumas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros",
+        "description": "03 - Cadastrar Memórias Póstumas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Memórias Póstumas de Brás Cubas\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1881\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+              "const livro = pm.response.json();",
+              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"Memórias Póstumas de Brás Cubas\"); pm.expect(livro.id).to.be.a(\"number\"); });",
+              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
+              "pm.collectionVariables.set(\"idMemorias\", livro.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Cadastrar O Hobbit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros",
+        "description": "04 - Cadastrar O Hobbit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"O Hobbit\",\n  \"autor\": \"J. R. R. Tolkien\",\n  \"genero\": \"Fantasia\",\n  \"anoPublicacao\": 1937\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+              "const livro = pm.response.json();",
+              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"O Hobbit\"); pm.expect(livro.id).to.be.a(\"number\"); });",
+              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
+              "pm.collectionVariables.set(\"idHobbit\", livro.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Listar todos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros",
+        "description": "05 - Listar todos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Três livros\", function () { pm.expect(pm.response.json()).to.have.lengthOf(3); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Buscar por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idDom}}",
+        "description": "06 - Buscar por ID"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Livro correto\", function () { pm.expect(pm.response.json().titulo).to.eql(\"Dom Casmurro\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Filtrar por título",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?titulo=DOM",
+        "description": "07 - Filtrar por título"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\"))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Filtrar por autor",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?autor=machado",
+        "description": "08 - Filtrar por autor"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\")),Number(pm.collectionVariables.get(\"idMemorias\"))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Filtrar por gênero",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?genero=Fantasia",
+        "description": "09 - Filtrar por gênero"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idHobbit\"))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Filtrar por ano",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?anoPublicacao=1899",
+        "description": "10 - Filtrar por ano"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\"))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Combinar autor e gênero",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?autor=machado&genero=Romance",
+        "description": "11 - Combinar autor e gênero"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\")),Number(pm.collectionVariables.get(\"idMemorias\"))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Combinar os quatro filtros",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?titulo=dom&autor=machado&genero=romance&anoPublicacao=1899",
+        "description": "12 - Combinar os quatro filtros"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\"))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Combinação sem resultado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?autor=machado&genero=Fantasia",
+        "description": "13 - Combinação sem resultado"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Atualizar livro",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros/{{idDom}}",
+        "description": "14 - Atualizar livro",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Dom Casmurro - edição de bolso\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"ID mantido e título atualizado\", function () { const livro = pm.response.json(); pm.expect(livro.id).to.eql(Number(pm.collectionVariables.get(\"idDom\"))); pm.expect(livro.titulo).to.eql(\"Dom Casmurro - edição de bolso\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 - Consultar após atualização",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idDom}}",
+        "description": "15 - Consultar após atualização"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Atualização salva\", function () { pm.expect(pm.response.json().titulo).to.eql(\"Dom Casmurro - edição de bolso\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 - Rejeitar título vazio",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros",
+        "description": "16 - Rejeitar título vazio",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"Mensagem de validação\", function () { pm.expect(pm.response.json().mensagem).to.eql(\"Informe o título do livro.\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 - Rejeitar ID inválido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros/abc",
+        "description": "17 - Rejeitar ID inválido"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 - Rejeitar ano inválido no filtro",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros?anoPublicacao=abc",
+        "description": "18 - Rejeitar ano inválido no filtro"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 - Buscar ID inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros/9223372036854775807",
+        "description": "19 - Buscar ID inexistente"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 - Atualizar ID inexistente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros/9223372036854775807",
+        "description": "20 - Atualizar ID inexistente",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 - Excluir Dom Casmurro",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idDom}}",
+        "description": "21 - Excluir Dom Casmurro"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });",
+              "pm.test(\"Resposta sem corpo\", function () { pm.expect(pm.response.text()).to.eql(\"\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 - Consultar livro excluído",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idDom}}",
+        "description": "22 - Consultar livro excluído"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 - Conferir ID do segundo livro",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idMemorias}}",
+        "description": "23 - Conferir ID do segundo livro"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"ID não mudou após exclusão\", function () { pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"idMemorias\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 - Novo cadastro após exclusão",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/livros",
+        "description": "24 - Novo cadastro após exclusão",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
+              "const livro = pm.response.json();",
+              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"Dom Casmurro\"); pm.expect(livro.id).to.be.a(\"number\"); });",
+              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
+              "pm.collectionVariables.set(\"idNovo\", livro.id);",
+              "pm.test(\"ID continua aumentando\", function () { pm.expect(pm.response.json().id).to.be.above(Number(pm.collectionVariables.get(\"idHobbit\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 - Excluir Memórias Póstumas",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idMemorias}}",
+        "description": "25 - Excluir Memórias Póstumas"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 - Excluir O Hobbit",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idHobbit}}",
+        "description": "26 - Excluir O Hobbit"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 - Excluir novo livro",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idNovo}}",
+        "description": "27 - Excluir novo livro"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 - Excluir novamente",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/livros/{{idNovo}}",
+        "description": "28 - Excluir novamente"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 - Confirmar catálogo vazio",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/livros",
+        "description": "29 - Confirmar catálogo vazio"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Todos excluídos\", function () { pm.expect(pm.response.json()).to.eql([]); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
