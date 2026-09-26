@@ -96,6 +96,16 @@ http://localhost:8080/livros?titulo=dom&autor=machado&genero=romance&anoPublicac
 
 ## Postman
 
+Na conta `matheusmendes0310`, a coleção já está configurada no workspace **Matheus Mendes's Workspace**:
+
+[Abrir Catálogo de Livros no Postman](https://go.postman.co/workspace/9387eabc-5698-4afe-8bf1-96380dcc913a/collection/58534606-50d66ef9-8d9d-49bd-94e1-543078a7800b)
+
+Ela tem as 29 requisições, as verificações automáticas e exemplos de respostas obtidas nos testes. O ambiente **Catálogo de Livros - Local** contém o endereço da API. A coleção também funciona sem selecionar um ambiente, pois já possui a variável `baseUrl`.
+
+Para usar o Postman no navegador, mantenha o Desktop Agent aberto e selecione **Desktop Agent** no Postman. A API precisa estar iniciada. O agente da nuvem não consegue acessar `localhost`.
+
+Se preferir importar o arquivo em outra conta ou no aplicativo de desktop:
+
 1. Inicie a aplicação.
 2. No Postman, clique em **Import** e selecione `postman/Catalogo-Livros.postman_collection.json`.
 3. Abra a coleção. A variável `baseUrl` já contém `http://localhost:8080`.
@@ -105,6 +115,20 @@ http://localhost:8080/livros?titulo=dom&autor=machado&genero=romance&anoPublicac
 Os cadastros salvam os IDs nas variáveis da coleção, usados nas consultas, atualizações e exclusões. Não é necessário preencher essas variáveis manualmente. Na execução completa, os livros de teste são excluídos ao final.
 
 A coleção cobre CRUD, os quatro filtros isolados, filtros combinados, busca sem resultado, validação, IDs inválidos, registros inexistentes e a preservação dos IDs após excluir um livro.
+
+### Executar a coleção automaticamente no Windows
+
+Com a API iniciada e a lista vazia, dê dois cliques em `testar-postman.cmd` ou execute:
+
+```powershell
+.\testar-postman.cmd
+```
+
+O script baixa o executor oficial do Postman na primeira execução e roda todas as requisições e verificações. Não precisa de Node.js nem de login no Postman. Ao terminar, abra `postman/relatorios/resultado.html` no navegador para conferir os resultados. O relatório detalhado também fica em `postman/relatorios/resultado.json`. Os relatórios e a ferramenta baixada ficam somente no computador.
+
+Se a lista já tiver livros, o script pede para reiniciar a API. Isso evita alterar cadastros feitos fora dos testes. A execução completa exclui somente os livros criados pela coleção.
+
+O teste automático usa o Postman CLI. Avisos sobre login e publicação na nuvem não impedem os testes locais. Para mostrar a interface do Postman no vídeo, abra a coleção configurada na sua conta ou importe o arquivo no aplicativo e execute as requisições na ordem.
 
 ## Testes automatizados
 
@@ -122,7 +146,7 @@ Ou, com o JDK configurado:
 
 Os testes verificam requisições e respostas JSON, códigos HTTP, geração do ID, filtros e alterações na lista. Eles ficam em `src/test` e não acrescentam camadas à aplicação.
 
-Na verificação do projeto, os 10 testes Java passaram. A coleção também foi executada contra a API pelo Newman, executor de coleções do Postman: 29 requisições e 54 verificações, sem falhas.
+Na verificação do projeto, os 10 testes Java passaram. A coleção também foi executada contra a API pelo Newman e pelo Postman CLI: 29 requisições e 54 verificações, sem falhas.
 
 ## Estrutura principal
 
