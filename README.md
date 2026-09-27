@@ -1,5 +1,7 @@
 # Catálogo de livros
 
+Integrantes: Matheus Mendes e Gabriel Foscarini.
+
 API REST para cadastrar e consultar livros. Trabalho de Java com Spring Boot, seguindo a estrutura de model e controller do exemplo de aula.
 
 Os livros ficam em uma `List<Livro>` no controller. A aplicação começa vazia e os dados são perdidos quando ela é encerrada. O ID é gerado por um contador: 1, 2, 3... Excluir um registro não altera os IDs dos outros nem reaproveita o ID excluído durante a mesma execução.
