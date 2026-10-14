@@ -50,9 +50,12 @@ public class LivroController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
-        return repository.findById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(this::naoEncontrado);
+        Optional<Livro> encontrado = repository.findById(id);
+        if (encontrado.isEmpty()) {
+            return naoEncontrado();
+        }
+
+        return ResponseEntity.ok(encontrado.get());
     }
 
     @PostMapping

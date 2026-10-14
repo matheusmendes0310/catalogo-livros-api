@@ -26,6 +26,8 @@ A API fica em `http://localhost:8080/livros`. Para ver diretamente no banco:
 SELECT id, titulo, autor, genero, ano_publicacao FROM livros ORDER BY id;
 ```
 
+O arquivo [consultas.sql](consultas.sql) também contém a consulta por ID. Execute-o conectado ao banco `catalogo_livros`.
+
 ## Postman
 
 Importe [postman/Catalogo-Livros.postman_collection.json](postman/Catalogo-Livros.postman_collection.json). Execute as requisições 01 e 02; reinicie a aplicação, sem apagar o banco; depois execute a 03 para consultar o mesmo ID. As demais requisições cobrem filtros, atualização, exclusão e validação. O arquivo `testar-postman.cmd` executa a coleção completa automaticamente, mas a pausa para reiniciar precisa ser feita manualmente na demonstração.
