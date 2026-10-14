@@ -5,13 +5,9 @@ try {
     Set-Location -LiteralPath $pastaProjeto
 
     try {
-        $livros = Invoke-RestMethod -Uri 'http://localhost:8080/livros' -TimeoutSec 10
+        Invoke-RestMethod -Uri 'http://localhost:8080/livros' -TimeoutSec 10 | Out-Null
     } catch {
         throw 'Inicie a API com iniciar.cmd, aguarde a inicializacao e execute este arquivo novamente.'
-    }
-
-    if ($livros.Count -gt 0) {
-        throw 'A lista precisa estar vazia. Reinicie a API antes de executar a colecao completa.'
     }
 
     $pastaFerramenta = Join-Path $pastaProjeto '.tools\postman-cli'

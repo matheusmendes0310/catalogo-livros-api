@@ -1,132 +1,245 @@
 {
   "info": {
-    "name": "Catálogo de Livros",
-    "description": "API com CRUD em memória. Reinicie a aplicação e execute as requisições em ordem. Os IDs são salvos automaticamente nas variáveis da coleção.",
+    "name": "Catálogo de Livros - PostgreSQL",
+    "description": "Trabalho II. Execute 01 e 02, reinicie a API e execute 03 em diante para demonstrar persistência. Os IDs são salvos nas variáveis da coleção.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080",
-      "type": "string"
+      "value": "http://localhost:8080"
     },
     {
-      "key": "idDom",
-      "value": "",
-      "type": "string"
+      "key": "idPersistente",
+      "value": ""
     },
     {
-      "key": "idMemorias",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "idHobbit",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "idNovo",
-      "value": "",
-      "type": "string"
+      "key": "idTemporario",
+      "value": ""
     }
   ],
   "item": [
     {
-      "name": "01 - Listar catálogo vazio",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros",
-        "description": "01 - Listar catálogo vazio"
-      },
-      "event": [
+      "name": "Antes de reiniciar",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Lista vazia\", function () { pm.expect(pm.response.json()).to.eql([]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
+          "name": "01 - Cadastrar livro para verificar persistência",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/livros",
+            "description": "O JSON não envia id. Guarde o ID retornado para consultar o mesmo registro após reiniciar a API.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"A Hora da Estrela\",\n  \"autor\": \"Clarice Lispector\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1977\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const livro = pm.response.json();",
+                  "pm.test(\"ID gerado pelo banco\", () => pm.expect(livro.id).to.be.a(\"number\"));",
+                  "pm.test(\"Localização\", () => pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id));",
+                  "pm.collectionVariables.set(\"idPersistente\", livro.id);"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "name": "200 OK - teste local",
-          "originalRequest": {
+          "name": "02 - Consultar antes de reiniciar",
+          "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/livros",
-            "description": "01 - Listar catálogo vazio"
+            "url": "{{baseUrl}}/livros/{{idPersistente}}"
           },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Content-Type",
-              "value": "application/json"
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro correto\", () => pm.expect(pm.response.json().titulo).to.eql(\"A Hora da Estrela\"));"
+                ]
+              }
             }
-          ],
-          "body": "[]"
+          ]
         }
       ]
     },
     {
-      "name": "02 - Cadastrar Dom Casmurro",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros",
-        "description": "02 - Cadastrar Dom Casmurro",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+      "name": "Depois de reiniciar - filtros e CRUD",
+      "item": [
+        {
+          "name": "03 - Consultar depois de reiniciar a API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros/{{idPersistente}}",
+            "description": "Para demonstrar persistência, pare a aplicação após a requisição 02, inicie-a novamente e só então envie esta requisição. Confira o mesmo ID também no PostgreSQL com SELECT * FROM livros WHERE id = ID_RETORNADO;"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mesmo ID e título\", () => { const livro = pm.response.json(); pm.expect(livro.id).to.eql(Number(pm.collectionVariables.get(\"idPersistente\"))); pm.expect(livro.titulo).to.eql(\"A Hora da Estrela\"); });"
+                ]
+              }
             }
-          }
-        }
-      },
-      "event": [
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
-              "const livro = pm.response.json();",
-              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"Dom Casmurro\"); pm.expect(livro.id).to.be.a(\"number\"); });",
-              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
-              "pm.collectionVariables.set(\"idDom\", livro.id);"
-            ]
-          }
-        }
-      ],
-      "response": [
+          "name": "04 - Listar livros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro encontrado\", () => pm.expect(pm.response.json().map(l => l.id)).to.include(Number(pm.collectionVariables.get(\"idPersistente\"))));"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "name": "201 Created - teste local",
-          "originalRequest": {
-            "method": "POST",
+          "name": "05 - Filtrar por título",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros?titulo=hora"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro encontrado\", () => pm.expect(pm.response.json().map(l => l.id)).to.include(Number(pm.collectionVariables.get(\"idPersistente\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Filtrar por autor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros?autor=Clarice"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro encontrado\", () => pm.expect(pm.response.json().map(l => l.id)).to.include(Number(pm.collectionVariables.get(\"idPersistente\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Filtrar por gênero",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros?genero=Romance"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro encontrado\", () => pm.expect(pm.response.json().map(l => l.id)).to.include(Number(pm.collectionVariables.get(\"idPersistente\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Filtrar por ano",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros?anoPublicacao=1977"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro encontrado\", () => pm.expect(pm.response.json().map(l => l.id)).to.include(Number(pm.collectionVariables.get(\"idPersistente\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Combinar quatro filtros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros?titulo=HORA&autor=clarice&genero=romance&anoPublicacao=1977"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Livro encontrado\", () => pm.expect(pm.response.json().map(l => l.id)).to.include(Number(pm.collectionVariables.get(\"idPersistente\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 - Atualizar livro",
+          "request": {
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/livros",
-            "description": "02 - Cadastrar Dom Casmurro",
+            "url": "{{baseUrl}}/livros/{{idPersistente}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+              "raw": "{\n  \"titulo\": \"A Hora da Estrela - edição revista\",\n  \"autor\": \"Clarice Lispector\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1977\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -134,141 +247,42 @@
               }
             }
           },
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Location",
-              "value": "/livros/1"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1899,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 1,\n  \"titulo\": \"Dom Casmurro\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "03 - Cadastrar Memórias Póstumas",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros",
-        "description": "03 - Cadastrar Memórias Póstumas",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"Memórias Póstumas de Brás Cubas\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1881\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
-              "const livro = pm.response.json();",
-              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"Memórias Póstumas de Brás Cubas\"); pm.expect(livro.id).to.be.a(\"number\"); });",
-              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
-              "pm.collectionVariables.set(\"idMemorias\", livro.id);"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "201 Created - teste local",
-          "originalRequest": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/livros",
-            "description": "03 - Cadastrar Memórias Póstumas",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"titulo\": \"Memórias Póstumas de Brás Cubas\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1881\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Título atualizado e ID mantido\", () => { const livro = pm.response.json(); pm.expect(livro.id).to.eql(Number(pm.collectionVariables.get(\"idPersistente\"))); pm.expect(livro.titulo).to.eql(\"A Hora da Estrela - edição revista\"); });"
+                ]
               }
             }
+          ]
+        },
+        {
+          "name": "11 - Confirmar atualização",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/livros/{{idPersistente}}"
           },
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Location",
-              "value": "/livros/2"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json"
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Alteração salva\", () => pm.expect(pm.response.json().titulo).to.eql(\"A Hora da Estrela - edição revista\"));"
+                ]
+              }
             }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1881,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 2,\n  \"titulo\": \"Memórias Póstumas de Brás Cubas\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "04 - Cadastrar O Hobbit",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros",
-        "description": "04 - Cadastrar O Hobbit",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"O Hobbit\",\n  \"autor\": \"J. R. R. Tolkien\",\n  \"genero\": \"Fantasia\",\n  \"anoPublicacao\": 1937\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "event": [
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
-              "const livro = pm.response.json();",
-              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"O Hobbit\"); pm.expect(livro.id).to.be.a(\"number\"); });",
-              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
-              "pm.collectionVariables.set(\"idHobbit\", livro.id);"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "201 Created - teste local",
-          "originalRequest": {
+          "name": "12 - Cadastrar livro temporário",
+          "request": {
             "method": "POST",
             "header": [
               {
@@ -277,7 +291,6 @@
               }
             ],
             "url": "{{baseUrl}}/livros",
-            "description": "04 - Cadastrar O Hobbit",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"titulo\": \"O Hobbit\",\n  \"autor\": \"J. R. R. Tolkien\",\n  \"genero\": \"Fantasia\",\n  \"anoPublicacao\": 1937\n}",
@@ -288,551 +301,61 @@
               }
             }
           },
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Location",
-              "value": "/livros/3"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1937,\n  \"autor\": \"J. R. R. Tolkien\",\n  \"genero\": \"Fantasia\",\n  \"id\": 3,\n  \"titulo\": \"O Hobbit\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "05 - Listar todos",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros",
-        "description": "05 - Listar todos"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Três livros\", function () { pm.expect(pm.response.json()).to.have.lengthOf(3); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros",
-            "description": "05 - Listar todos"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1899,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 1,\n    \"titulo\": \"Dom Casmurro\"\n  },\n  {\n    \"anoPublicacao\": 1881,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 2,\n    \"titulo\": \"Memórias Póstumas de Brás Cubas\"\n  },\n  {\n    \"anoPublicacao\": 1937,\n    \"autor\": \"J. R. R. Tolkien\",\n    \"genero\": \"Fantasia\",\n    \"id\": 3,\n    \"titulo\": \"O Hobbit\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "06 - Buscar por ID",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idDom}}",
-        "description": "06 - Buscar por ID"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Livro correto\", function () { pm.expect(pm.response.json().titulo).to.eql(\"Dom Casmurro\"); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idDom}}",
-            "description": "06 - Buscar por ID"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1899,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 1,\n  \"titulo\": \"Dom Casmurro\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "07 - Filtrar por título",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?titulo=DOM",
-        "description": "07 - Filtrar por título"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\"))]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?titulo=DOM",
-            "description": "07 - Filtrar por título"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1899,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 1,\n    \"titulo\": \"Dom Casmurro\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "08 - Filtrar por autor",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?autor=machado",
-        "description": "08 - Filtrar por autor"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\")),Number(pm.collectionVariables.get(\"idMemorias\"))]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?autor=machado",
-            "description": "08 - Filtrar por autor"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1899,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 1,\n    \"titulo\": \"Dom Casmurro\"\n  },\n  {\n    \"anoPublicacao\": 1881,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 2,\n    \"titulo\": \"Memórias Póstumas de Brás Cubas\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "09 - Filtrar por gênero",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?genero=Fantasia",
-        "description": "09 - Filtrar por gênero"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idHobbit\"))]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?genero=Fantasia",
-            "description": "09 - Filtrar por gênero"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1937,\n    \"autor\": \"J. R. R. Tolkien\",\n    \"genero\": \"Fantasia\",\n    \"id\": 3,\n    \"titulo\": \"O Hobbit\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "10 - Filtrar por ano",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?anoPublicacao=1899",
-        "description": "10 - Filtrar por ano"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\"))]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?anoPublicacao=1899",
-            "description": "10 - Filtrar por ano"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1899,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 1,\n    \"titulo\": \"Dom Casmurro\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "11 - Combinar autor e gênero",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?autor=machado&genero=Romance",
-        "description": "11 - Combinar autor e gênero"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\")),Number(pm.collectionVariables.get(\"idMemorias\"))]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?autor=machado&genero=Romance",
-            "description": "11 - Combinar autor e gênero"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1899,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 1,\n    \"titulo\": \"Dom Casmurro\"\n  },\n  {\n    \"anoPublicacao\": 1881,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 2,\n    \"titulo\": \"Memórias Póstumas de Brás Cubas\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "12 - Combinar os quatro filtros",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?titulo=dom&autor=machado&genero=romance&anoPublicacao=1899",
-        "description": "12 - Combinar os quatro filtros"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([Number(pm.collectionVariables.get(\"idDom\"))]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?titulo=dom&autor=machado&genero=romance&anoPublicacao=1899",
-            "description": "12 - Combinar os quatro filtros"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[\n  {\n    \"anoPublicacao\": 1899,\n    \"autor\": \"Machado de Assis\",\n    \"genero\": \"Romance\",\n    \"id\": 1,\n    \"titulo\": \"Dom Casmurro\"\n  }\n]"
-        }
-      ]
-    },
-    {
-      "name": "13 - Combinação sem resultado",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?autor=machado&genero=Fantasia",
-        "description": "13 - Combinação sem resultado"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Resultado do filtro\", function () { const ids = pm.response.json().map(l => l.id); pm.expect(ids).to.eql([]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?autor=machado&genero=Fantasia",
-            "description": "13 - Combinação sem resultado"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[]"
-        }
-      ]
-    },
-    {
-      "name": "14 - Atualizar livro",
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros/{{idDom}}",
-        "description": "14 - Atualizar livro",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"Dom Casmurro - edição de bolso\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"ID mantido e título atualizado\", function () { const livro = pm.response.json(); pm.expect(livro.id).to.eql(Number(pm.collectionVariables.get(\"idDom\"))); pm.expect(livro.titulo).to.eql(\"Dom Casmurro - edição de bolso\"); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/livros/{{idDom}}",
-            "description": "14 - Atualizar livro",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"titulo\": \"Dom Casmurro - edição de bolso\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"idTemporario\", pm.response.json().id);"
+                ]
               }
             }
+          ]
+        },
+        {
+          "name": "13 - Excluir livro temporário",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/livros/{{idTemporario}}"
           },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Content-Type",
-              "value": "application/json"
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
             }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1899,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 1,\n  \"titulo\": \"Dom Casmurro - edição de bolso\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "15 - Consultar após atualização",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idDom}}",
-        "description": "15 - Consultar após atualização"
-      },
-      "event": [
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Atualização salva\", function () { pm.expect(pm.response.json().titulo).to.eql(\"Dom Casmurro - edição de bolso\"); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
+          "name": "14 - Confirmar exclusão",
+          "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/livros/{{idDom}}",
-            "description": "15 - Consultar após atualização"
+            "url": "{{baseUrl}}/livros/{{idTemporario}}"
           },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Content-Type",
-              "value": "application/json"
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Mensagem de não encontrado\", () => pm.expect(pm.response.json().mensagem).to.eql(\"Livro não encontrado.\"));"
+                ]
+              }
             }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1899,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 1,\n  \"titulo\": \"Dom Casmurro - edição de bolso\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "16 - Rejeitar título vazio",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros",
-        "description": "16 - Rejeitar título vazio",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "event": [
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });",
-              "pm.test(\"Mensagem de validação\", function () { pm.expect(pm.response.json().mensagem).to.eql(\"Informe o título do livro.\"); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "400 Bad Request - teste local",
-          "originalRequest": {
+          "name": "15 - Rejeitar cadastro incompleto",
+          "request": {
             "method": "POST",
             "header": [
               {
@@ -841,10 +364,9 @@
               }
             ],
             "url": "{{baseUrl}}/livros",
-            "description": "16 - Rejeitar título vazio",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"titulo\": \"\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
+              "raw": "{\n  \"titulo\": \"Sem autor\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 2000\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -852,597 +374,17 @@
               }
             }
           },
-          "status": "Bad Request",
-          "code": 400,
-          "_postman_previewlanguage": "json",
-          "header": [
+          "event": [
             {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"mensagem\": \"Informe o título do livro.\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "17 - Rejeitar ID inválido",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros/abc",
-        "description": "17 - Rejeitar ID inválido"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "400 Bad Request - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros/abc",
-            "description": "17 - Rejeitar ID inválido"
-          },
-          "status": "Bad Request",
-          "code": 400,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"timestamp\": \"2026-09-26T05:10:25.519Z\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"path\": \"/livros/abc\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "18 - Rejeitar ano inválido no filtro",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros?anoPublicacao=abc",
-        "description": "18 - Rejeitar ano inválido no filtro"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 400\", function () { pm.response.to.have.status(400); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "400 Bad Request - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros?anoPublicacao=abc",
-            "description": "18 - Rejeitar ano inválido no filtro"
-          },
-          "status": "Bad Request",
-          "code": 400,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"timestamp\": \"2026-09-26T05:10:25.614Z\",\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"path\": \"/livros\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "19 - Buscar ID inexistente",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros/9223372036854775807",
-        "description": "19 - Buscar ID inexistente"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "404 Not Found - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros/9223372036854775807",
-            "description": "19 - Buscar ID inexistente"
-          },
-          "status": "Not Found",
-          "code": 404,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"mensagem\": \"Livro não encontrado.\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "20 - Atualizar ID inexistente",
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros/9223372036854775807",
-        "description": "20 - Atualizar ID inexistente",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "404 Not Found - teste local",
-          "originalRequest": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/livros/9223372036854775807",
-            "description": "20 - Atualizar ID inexistente",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
               }
             }
-          },
-          "status": "Not Found",
-          "code": 404,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"mensagem\": \"Livro não encontrado.\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "21 - Excluir Dom Casmurro",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idDom}}",
-        "description": "21 - Excluir Dom Casmurro"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });",
-              "pm.test(\"Resposta sem corpo\", function () { pm.expect(pm.response.text()).to.eql(\"\"); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "204 No Content - teste local",
-          "originalRequest": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idDom}}",
-            "description": "21 - Excluir Dom Casmurro"
-          },
-          "status": "No Content",
-          "code": 204,
-          "_postman_previewlanguage": "json",
-          "header": [],
-          "body": ""
-        }
-      ]
-    },
-    {
-      "name": "22 - Consultar livro excluído",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idDom}}",
-        "description": "22 - Consultar livro excluído"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "404 Not Found - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idDom}}",
-            "description": "22 - Consultar livro excluído"
-          },
-          "status": "Not Found",
-          "code": 404,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"mensagem\": \"Livro não encontrado.\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "23 - Conferir ID do segundo livro",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idMemorias}}",
-        "description": "23 - Conferir ID do segundo livro"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"ID não mudou após exclusão\", function () { pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"idMemorias\"))); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idMemorias}}",
-            "description": "23 - Conferir ID do segundo livro"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1881,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 2,\n  \"titulo\": \"Memórias Póstumas de Brás Cubas\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "24 - Novo cadastro após exclusão",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": "{{baseUrl}}/livros",
-        "description": "24 - Novo cadastro após exclusão",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 201\", function () { pm.response.to.have.status(201); });",
-              "const livro = pm.response.json();",
-              "pm.test(\"Dados cadastrados\", function () { pm.expect(livro.titulo).to.eql(\"Dom Casmurro\"); pm.expect(livro.id).to.be.a(\"number\"); });",
-              "pm.test(\"Localização do livro\", function () { pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/livros/\" + livro.id); });",
-              "pm.collectionVariables.set(\"idNovo\", livro.id);",
-              "pm.test(\"ID continua aumentando\", function () { pm.expect(pm.response.json().id).to.be.above(Number(pm.collectionVariables.get(\"idHobbit\"))); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "201 Created - teste local",
-          "originalRequest": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/livros",
-            "description": "24 - Novo cadastro após exclusão",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"titulo\": \"Dom Casmurro\",\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"anoPublicacao\": 1899\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Location",
-              "value": "/livros/4"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"anoPublicacao\": 1899,\n  \"autor\": \"Machado de Assis\",\n  \"genero\": \"Romance\",\n  \"id\": 4,\n  \"titulo\": \"Dom Casmurro\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "25 - Excluir Memórias Póstumas",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idMemorias}}",
-        "description": "25 - Excluir Memórias Póstumas"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "204 No Content - teste local",
-          "originalRequest": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idMemorias}}",
-            "description": "25 - Excluir Memórias Póstumas"
-          },
-          "status": "No Content",
-          "code": 204,
-          "_postman_previewlanguage": "json",
-          "header": [],
-          "body": ""
-        }
-      ]
-    },
-    {
-      "name": "26 - Excluir O Hobbit",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idHobbit}}",
-        "description": "26 - Excluir O Hobbit"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "204 No Content - teste local",
-          "originalRequest": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idHobbit}}",
-            "description": "26 - Excluir O Hobbit"
-          },
-          "status": "No Content",
-          "code": 204,
-          "_postman_previewlanguage": "json",
-          "header": [],
-          "body": ""
-        }
-      ]
-    },
-    {
-      "name": "27 - Excluir novo livro",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idNovo}}",
-        "description": "27 - Excluir novo livro"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 204\", function () { pm.response.to.have.status(204); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "204 No Content - teste local",
-          "originalRequest": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idNovo}}",
-            "description": "27 - Excluir novo livro"
-          },
-          "status": "No Content",
-          "code": 204,
-          "_postman_previewlanguage": "json",
-          "header": [],
-          "body": ""
-        }
-      ]
-    },
-    {
-      "name": "28 - Excluir novamente",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": "{{baseUrl}}/livros/{{idNovo}}",
-        "description": "28 - Excluir novamente"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404\", function () { pm.response.to.have.status(404); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "404 Not Found - teste local",
-          "originalRequest": {
-            "method": "DELETE",
-            "header": [],
-            "url": "{{baseUrl}}/livros/{{idNovo}}",
-            "description": "28 - Excluir novamente"
-          },
-          "status": "Not Found",
-          "code": 404,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "{\n  \"mensagem\": \"Livro não encontrado.\"\n}"
-        }
-      ]
-    },
-    {
-      "name": "29 - Confirmar catálogo vazio",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/livros",
-        "description": "29 - Confirmar catálogo vazio"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200\", function () { pm.response.to.have.status(200); });",
-              "pm.test(\"Todos excluídos\", function () { pm.expect(pm.response.json()).to.eql([]); });"
-            ]
-          }
-        }
-      ],
-      "response": [
-        {
-          "name": "200 OK - teste local",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/livros",
-            "description": "29 - Confirmar catálogo vazio"
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "header": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ],
-          "body": "[]"
+          ]
         }
       ]
     }
